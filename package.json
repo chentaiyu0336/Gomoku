@@ -1,0 +1,20 @@
+{
+  "name": "gomoku-game",
+  "version": "1.0.0",
+  "description": "一个简单的五子棋游戏实现",
+  "main": "game.js",
+  "scripts": {
+    "start": "http-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gomoku",
+    "五子棋",
+    "游戏"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+} 

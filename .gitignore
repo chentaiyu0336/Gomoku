@@ -1,0 +1,17 @@
+.idea
+node_modules/
+*.sqlite3
+*.iml
+!database/china-leave-template.sqlite3
+dist/
+.nyc_output/
+coverage/
+build/
+.env
+.DS_Store
+script/env.js
+script/exportData
+script/importData
+script/sql
+cloud-sql-proxy
+.talismanrc

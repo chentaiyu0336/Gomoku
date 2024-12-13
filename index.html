@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋游戏</title>
+    <style>
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(15, 40px);
+            gap: 0px;
+            margin: 20px auto;
+            width: 600px;
+            background-color: #DEB887;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell::before {
+            content: '';
+            display: block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .cell.X::before {
+            background-color: black;
+        }
+        .cell.O::before {
+            background-color: white;
+            border: 1px solid black;
+        }
+        .status {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px;
+        }
+        .restart {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">轮到 X 玩家</div>
+    <div class="game-board" id="board"></div>
+    <button class="restart" onclick="restartGame()">重新开始</button>
+    <script src="game.js"></script>
+</body>
+</html> 
