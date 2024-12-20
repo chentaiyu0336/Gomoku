@@ -25,17 +25,21 @@ function initializeBoard() {
 }
 
 // 可能获胜检查逻辑
-function checkMayBeWin(player, lastMove) {
+function checkMayBeWin(player, lastMove, winCount) {
     const row = Math.floor(lastMove / BOARD_SIZE);
     const col = lastMove % BOARD_SIZE;
+    let count = 1;
+    let canWin = false;
+    let cellBeforeFirst; // 检查连子前一个棋格子
+    let cellAfterLast; // 检查连子后一个棋格子
     
-    return DIRECTIONS.some(([dx, dy]) => {
-        let count = 1;
-        let cellBeforeFirst; // 检查连子前一个棋格子
-        let cellAfterLast; // 检查连子后一个棋格子
+    DIRECTIONS.some(([dx, dy]) => {
+        count = 1;
+        cellBeforeFirst = null; // 检查连子前一个棋格子
+        cellAfterLast = null; // 检查连子后一个棋格子
         
         // 正向检查
-        for (let i = 1; i < WIN_COUNT; i++) {
+        for (let i = 1; i < winCount; i++) {
             const newRow = row + dx * i;
             const newCol = col + dy * i;
             if (!isValidPosition(newRow, newCol)) {
@@ -49,7 +53,7 @@ function checkMayBeWin(player, lastMove) {
         }
 
         // 反向检查
-        for (let i = 1; i < WIN_COUNT; i++) {
+        for (let i = 1; i < winCount; i++) {
             const newRow = row - dx * i;
             const newCol = col - dy * i;
             if (!isValidPosition(newRow, newCol)) {
@@ -61,8 +65,14 @@ function checkMayBeWin(player, lastMove) {
             }
             count++;
         }
-        return count >= WIN_COUNT || (count === (WIN_COUNT - 1) && cellBeforeFirst === '' && cellAfterLast === '');
+        canWin = count >= winCount || (count === (winCount - 1) && cellBeforeFirst === '' && cellAfterLast === '');
+        return canWin === true;
     });
+
+    return {
+        canWin: canWin,
+        count: count
+    }
 }
 
 // 实际获胜检查逻辑
@@ -112,15 +122,32 @@ function getCell(row, col) {
 
 function findBestMove() {
     // 1. 检查AI能否直接获胜
-    let winMove = findWinningMove(AI);
-    if (winMove !== null) {
-        return winMove;
-    }
+    let winMove = findWinningMove(AI, WIN_COUNT);
     
     // 2. 阻止玩家获胜
-    let blockMove = findWinningMove(PLAYER);
+    let blockMove = findWinningMove(PLAYER, WIN_COUNT);
+
+    // 如果AI和玩家都能获胜，则选择AI获胜的步数最多的位置
+    if (winMove !== null && blockMove !== null) {
+        return winMove.count >= blockMove.count ? winMove.moveIndex : blockMove.moveIndex;
+    }
+
+    if (winMove !== null) {
+        return winMove.moveIndex;
+    }
+
     if (blockMove !== null) {
-        return blockMove;
+        return blockMove.moveIndex;
+    }
+
+    let winMoveBefore1 = findWinningMove(AI, 4);
+    if (winMoveBefore1 !== null) {
+        return winMoveBefore1.moveIndex;
+    } 
+    
+    let winMoveBefore2 = findWinningMove(AI, 3);
+    if (winMoveBefore2 !== null) {
+        return winMoveBefore2.moveIndex;
     }
     
     // 3. 寻找最有价值的位置
@@ -232,18 +259,28 @@ function makeAIMove() {
     }
 }
 
-function findWinningMove(player) {
+function findWinningMove(player, winCount) {
     for (let i = 0; i < gameBoard.length; i++) {
         if (!gameBoard[i]) {
             gameBoard[i] = player;
-            if (checkMayBeWin(player, i)) {
+            let { canWin, count } = checkMayBeWin(player, i, winCount);
+            if (winCount != WIN_COUNT && checkMoveInEdge(i)) {
+                canWin = false;
+            }   
+            if (canWin) {
                 gameBoard[i] = '';
-                return i;
+                return { moveIndex: i, count: count };
             }
             gameBoard[i] = '';
         }
     }
     return null;
+}
+
+function checkMoveInEdge(index) {
+    const row = Math.floor(index / BOARD_SIZE);
+    const col = index % BOARD_SIZE;
+    return row === 0 || row === BOARD_SIZE - 1 || col === 0 || col === BOARD_SIZE - 1;
 }
 
 function confirmMoveAction(index, player) {
