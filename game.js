@@ -24,7 +24,25 @@ function initializeBoard() {
     }
 }
 
-// 可能获胜检查逻辑
+function handleCellClick(e) {
+    const index = e.target.getAttribute('data-index');
+    if (gameBoard[index] != '') {
+        document.getElementById('status').textContent = "这个地方已经下过啦!请重新在空白格子落子!";
+        return;
+    }
+    makePlayerMove(index);
+    continueAIResponse();
+}
+
+function restartGame() {
+    gameBoard = Array(BOARD_SIZE * BOARD_SIZE).fill('');
+    gameOver = false;
+    document.getElementById('status').textContent = `可以开始啦`;
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.className = 'cell'; // 清除棋子样式
+    });
+}
+
 function checkMayBeWin(player, lastMove, winCount) {
     const row = Math.floor(lastMove / BOARD_SIZE);
     const col = lastMove % BOARD_SIZE;
@@ -35,10 +53,9 @@ function checkMayBeWin(player, lastMove, winCount) {
     
     DIRECTIONS.some(([dx, dy]) => {
         count = 1;
-        cellBeforeFirst = null; // 检查连子前一个棋格子
-        cellAfterLast = null; // 检查连子后一个棋格子
+        cellBeforeFirst = null;
+        cellAfterLast = null;
         
-        // 正向检查
         for (let i = 1; i < winCount; i++) {
             const newRow = row + dx * i;
             const newCol = col + dy * i;
@@ -52,7 +69,6 @@ function checkMayBeWin(player, lastMove, winCount) {
             count++;
         }
 
-        // 反向检查
         for (let i = 1; i < winCount; i++) {
             const newRow = row - dx * i;
             const newCol = col - dy * i;
@@ -75,7 +91,6 @@ function checkMayBeWin(player, lastMove, winCount) {
     }
 }
 
-// 实际获胜检查逻辑
 function checkActualWin(player, lastMove) {
     const row = Math.floor(lastMove / BOARD_SIZE);
     const col = lastMove % BOARD_SIZE;
@@ -83,7 +98,6 @@ function checkActualWin(player, lastMove) {
     return DIRECTIONS.some(([dx, dy]) => {
         let count = 1;
         
-        // 正向检查
         for (let i = 1; i < WIN_COUNT; i++) {
             const newRow = row + dx * i;
             const newCol = col + dy * i;
@@ -96,7 +110,6 @@ function checkActualWin(player, lastMove) {
             count++;
         }
 
-        // 反向检查
         for (let i = 1; i < WIN_COUNT; i++) {
             const newRow = row - dx * i;
             const newCol = col - dy * i;
@@ -121,13 +134,9 @@ function getCell(row, col) {
 }
 
 function findBestMove() {
-    // 1. 检查AI能否直接获胜
     let winMove = findWinningMove(AI, WIN_COUNT);
-    
-    // 2. 阻止玩家获胜
     let blockMove = findWinningMove(PLAYER, WIN_COUNT);
 
-    // 如果AI和玩家都能获胜，则选择AI获胜的步数最多的位置
     if (winMove !== null && blockMove !== null) {
         return winMove.count >= blockMove.count ? winMove.moveIndex : blockMove.moveIndex;
     }
@@ -140,17 +149,13 @@ function findBestMove() {
         return blockMove.moveIndex;
     }
 
-    let winMoveBefore1 = findWinningMove(AI, 4);
-    if (winMoveBefore1 !== null) {
-        return winMoveBefore1.moveIndex;
-    } 
-    
-    let winMoveBefore2 = findWinningMove(AI, 3);
-    if (winMoveBefore2 !== null) {
-        return winMoveBefore2.moveIndex;
+    for (let length = WIN_COUNT -1; length >= 3; length--) {
+        const potentialWin = findWinningMove(AI, length);
+        if (potentialWin !== null) {
+            return potentialWin.moveIndex;
+        }
     }
-    
-    // 3. 寻找最有价值的位置
+
     return findStrategicMove();
 }
 
@@ -167,6 +172,7 @@ function findStrategicMove() {
             }
         }
     }
+    
     return bestMove || gameBoard.findIndex(cell => !cell);
 }
 
@@ -184,7 +190,7 @@ function evaluatePosition(pos) {
             let aiCount = 0;
             
             // 检查连续4个位置
-            for (let step = 1; step < 5; step++) {
+            for (let step = 1; step < 3; step++) {
                 const newRow = row + i * step;
                 const newCol = col + j * step;
                 
@@ -203,9 +209,7 @@ function evaluatePosition(pos) {
 }
 
 function evaluateLineScore(playerCount, aiCount) {
-    if (playerCount === 0 && aiCount > 0) return aiCount * 2;
-    if (aiCount === 0 && playerCount > 0) return playerCount * 3;
-    return 0;
+    return aiCount + playerCount;
 }
 
 function makePlayerMove(index) {
@@ -239,18 +243,18 @@ function continueAIResponse() {
 
 function makeAIMove() {
     let bestMove = findBestMove();
-    
-    // AI 执行移动
     confirmMoveAction(bestMove, AI);
     
-    // 检查 AI 是否获胜
     if (checkActualWin(AI, bestMove)) {
         document.getElementById('status').textContent = "AI 获胜！下次加油咯";
         gameOver = true;
         return;
     }
     
-    // 切换回玩家回合
+   switchToPlayerRound();
+}
+
+function switchToPlayerRound() {
     if (gameBoard.includes('')) {
         document.getElementById('status').textContent = "轮到你了";
     } else {
@@ -286,22 +290,7 @@ function checkMoveInEdge(index) {
 function confirmMoveAction(index, player) {
     gameBoard[index] = player;
     const cell = document.querySelectorAll('.cell')[index];
-    cell.classList.add(player); // 添加类名实现棋子样式
-}
-
-function restartGame() {
-    gameBoard = Array(BOARD_SIZE * BOARD_SIZE).fill('');
-    gameOver = false;
-    document.getElementById('status').textContent = `可以开始啦`;
-    document.querySelectorAll('.cell').forEach(cell => {
-        cell.className = 'cell'; // 清除棋子样式
-    });
-}
-
-function handleCellClick(e) {
-    const index = e.target.getAttribute('data-index');
-    makePlayerMove(index);
-    continueAIResponse();
+    cell.classList.add(player); // 添加类名实��棋子样式
 }
 
 initializeBoard(); 
