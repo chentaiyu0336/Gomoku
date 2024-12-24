@@ -4,6 +4,7 @@ const PLAYER = 'X';
 const AI = 'O';
 let gameBoard = Array(BOARD_SIZE * BOARD_SIZE).fill('');
 let gameOver = false;
+let currentMode = null; // 'player' 或 'ai'
 
 // 检查是否获胜的方向
 const DIRECTIONS = [
@@ -24,23 +25,44 @@ function initializeBoard() {
     }
 }
 
-function handleCellClick(e) {
-    const index = e.target.getAttribute('data-index');
-    if (gameBoard[index] != '') {
-        document.getElementById('status').textContent = "这个地方已经下过啦!请重新在空白格子落子!";
-        return;
-    }
-    makePlayerMove(index);
-    continueAIResponse();
+function startGame(mode) {
+    currentMode = mode;
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'block';
+    restartGame();
+}
+
+function returnToSelectGameMode() {
+    document.getElementById('startScreen').style.display = 'block';
+    document.getElementById('gameContainer').style.display = 'none';
 }
 
 function restartGame() {
     gameBoard = Array(BOARD_SIZE * BOARD_SIZE).fill('');
     gameOver = false;
-    document.getElementById('status').textContent = `可以开始啦`;
     document.querySelectorAll('.cell').forEach(cell => {
-        cell.className = 'cell'; // 清除棋子样式
+        cell.className = 'cell';
     });
+
+    if (currentMode === 'ai') {
+        let centerCellIndex = Math.floor(BOARD_SIZE * BOARD_SIZE / 2);
+        setTimeout(() => {
+            confirmMoveAction(centerCellIndex, AI);
+            document.getElementById('status').textContent = `可以开始啦`;
+            }, 500);
+    }
+}
+
+function handleCellClick(e) {
+    const index = e.target.getAttribute('data-index');
+    if (gameBoard[index] !== '' || gameOver) {
+        document.getElementById('status').textContent = "这个地方已经下过啦!请重新在空白格子落子!";
+        return;
+    }
+    makePlayerMove(index);
+    if (!gameOver) {
+        continueAIResponse();
+    }
 }
 
 function checkMayBeWin(player, lastMove, winCount) {
@@ -50,12 +72,12 @@ function checkMayBeWin(player, lastMove, winCount) {
     let canWin = false;
     let cellBeforeFirst; // 检查连子前一个棋格子
     let cellAfterLast; // 检查连子后一个棋格子
-    
+
     DIRECTIONS.some(([dx, dy]) => {
         count = 1;
         cellBeforeFirst = null;
         cellAfterLast = null;
-        
+
         for (let i = 1; i < winCount; i++) {
             const newRow = row + dx * i;
             const newCol = col + dy * i;
@@ -65,7 +87,7 @@ function checkMayBeWin(player, lastMove, winCount) {
             if (getCell(newRow, newCol) !== player) {
                 cellAfterLast = getCell(newRow, newCol);
                 break;
-            }   
+            }
             count++;
         }
 
@@ -94,10 +116,10 @@ function checkMayBeWin(player, lastMove, winCount) {
 function checkActualWin(player, lastMove) {
     const row = Math.floor(lastMove / BOARD_SIZE);
     const col = lastMove % BOARD_SIZE;
-    
+
     return DIRECTIONS.some(([dx, dy]) => {
         let count = 1;
-        
+
         for (let i = 1; i < WIN_COUNT; i++) {
             const newRow = row + dx * i;
             const newCol = col + dy * i;
@@ -106,7 +128,7 @@ function checkActualWin(player, lastMove) {
             }
             if (getCell(newRow, newCol) !== player) {
                 break;
-            }   
+            }
             count++;
         }
 
@@ -162,7 +184,7 @@ function findBestMove() {
 function findStrategicMove() {
     let bestScore = -1;
     let bestMove = null;
-    
+
     for (let i = 0; i < gameBoard.length; i++) {
         if (!gameBoard[i]) {
             let score = evaluatePosition(i);
@@ -172,7 +194,7 @@ function findStrategicMove() {
             }
         }
     }
-    
+
     return bestMove || gameBoard.findIndex(cell => !cell);
 }
 
@@ -180,31 +202,31 @@ function evaluatePosition(pos) {
     const row = Math.floor(pos / BOARD_SIZE);
     const col = pos % BOARD_SIZE;
     let score = 0;
-    
+
     // 评估周围8个方向的棋子分布
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             if (i === 0 && j === 0) continue;
-            
+
             let playerCount = 0;
             let aiCount = 0;
-            
+
             // 检查连续4个位置
             for (let step = 1; step < 3; step++) {
                 const newRow = row + i * step;
                 const newCol = col + j * step;
-                
+
                 if (!isValidPosition(newRow, newCol)) break;
-                
+
                 const cell = getCell(newRow, newCol);
                 if (cell === PLAYER) playerCount++;
                 else if (cell === AI) aiCount++;
             }
-            
+
             score += evaluateLineScore(playerCount, aiCount);
         }
     }
-    
+
     return score;
 }
 
@@ -214,10 +236,10 @@ function evaluateLineScore(playerCount, aiCount) {
 
 function makePlayerMove(index) {
     if (gameBoard[index] || gameOver) return;
-    
+
     // 玩家移动
     confirmMoveAction(index, PLAYER);
-    
+
     // 检查玩家是否获胜
     if (checkActualWin(PLAYER, index)) {
         document.getElementById('status').textContent = `你赢啦！`;
@@ -226,9 +248,6 @@ function makePlayerMove(index) {
 }
 
 function continueAIResponse() {
-    if (gameOver) {
-        return;
-    }
     if (gameBoard.includes('')) {
         // 切换到 AI 移动
         document.getElementById('status').textContent = "AI 思考中...";
@@ -244,13 +263,13 @@ function continueAIResponse() {
 function makeAIMove() {
     let bestMove = findBestMove();
     confirmMoveAction(bestMove, AI);
-    
+
     if (checkActualWin(AI, bestMove)) {
         document.getElementById('status').textContent = "AI 获胜！下次加油咯";
         gameOver = true;
         return;
     }
-    
+
    switchToPlayerRound();
 }
 
@@ -270,7 +289,7 @@ function findWinningMove(player, winCount) {
             let { canWin, count } = checkMayBeWin(player, i, winCount);
             if (winCount != WIN_COUNT && checkMoveInEdge(i)) {
                 canWin = false;
-            }   
+            }
             if (canWin) {
                 gameBoard[i] = '';
                 return { moveIndex: i, count: count };
@@ -290,7 +309,7 @@ function checkMoveInEdge(index) {
 function confirmMoveAction(index, player) {
     gameBoard[index] = player;
     const cell = document.querySelectorAll('.cell')[index];
-    cell.classList.add(player); // 添加类名实��棋子样式
+    cell.classList.add(player); // 添加类名实棋子样式
 }
 
-initializeBoard(); 
+initializeBoard();
