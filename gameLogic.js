@@ -13,6 +13,29 @@ export class GameLogic {
             this._checkDirection(player, row, col, dx, dy));
     }
 
+    checkMayBeWin(player, lastMove, winCount) {
+        const row = Math.floor(lastMove / GameConfig.BOARD_SIZE);
+        const col = lastMove % GameConfig.BOARD_SIZE;
+        let count = 1;
+        let canWin = false;
+
+        GameConfig.DIRECTIONS.some(([dx, dy]) => {
+            count = 1;
+            const lineResult = this._checkLineInDirection(player, row, col, dx, dy, winCount);
+            count = lineResult.count;
+            
+            canWin = count >= winCount || 
+                (count === (winCount - 1) && lineResult.beforeFirst === '' && lineResult.afterLast === '');
+
+            return canWin;
+        });
+
+        return {
+            canWin,
+            count: count
+        };
+    }
+
     _checkDirection(player, row, col, dx, dy) {
         let count = 1;
 
@@ -39,51 +62,50 @@ export class GameLogic {
         return count;
     }
 
-    checkMayBeWin(player, lastMove, winCount) {
-        const row = Math.floor(lastMove / GameConfig.BOARD_SIZE);
-        const col = lastMove % GameConfig.BOARD_SIZE;
+    _checkLineInDirection(player, row, col, dx, dy, winCount) {
         let count = 1;
-        let canWin = false;
-        let cellBeforeFirst; // 检查连子前一个棋格子
-        let cellAfterLast; // 检查连子后一个棋格子
-    
-        GameConfig.DIRECTIONS.some(([dx, dy]) => {
-            count = 1;
-            cellBeforeFirst = null;
-            cellAfterLast = null;
-    
-            for (let i = 1; i < winCount; i++) {
-                const newRow = row + dx * i;
-                const newCol = col + dy * i;
-                if (!this.board.isValidPosition(newRow, newCol)) {
-                    break;
-                }
-                if (this.board.getCell(newRow, newCol) !== player) {
-                    cellAfterLast = this.board.getCell(newRow, newCol);
-                    break;
-                }
-                count++;
-            }
-    
-            for (let i = 1; i < winCount; i++) {
-                const newRow = row - dx * i;
-                const newCol = col - dy * i;
-                if (!this.board.isValidPosition(newRow, newCol)) {
-                    break;
-                }
-                if (this.board.getCell(newRow, newCol) !== player) {
-                    cellBeforeFirst = this.board.getCell(newRow, newCol);
-                    break;
-                }
-                count++;
-            }
-            canWin = count >= winCount || (count === (winCount - 1) && cellBeforeFirst === '' && cellAfterLast === '');
-            return canWin === true;
-        });
-    
+        let beforeFirst = null; // 检查连子前一个棋格子
+        let afterLast = null; // 检查连子后一个棋格子
+
+        // 检查正向
+        const forwardResult = this._countAndCheckEnd(player, row, col, dx, dy, winCount);
+        count += forwardResult.count;
+        afterLast = forwardResult.endCell;
+
+        // 检查反向
+        const backwardResult = this._countAndCheckEnd(player, row, col, -dx, -dy, winCount);
+        count += backwardResult.count;
+        beforeFirst = backwardResult.endCell;
+
         return {
-            canWin: canWin,
-            count: count
-        }
+            count,
+            beforeFirst,
+            afterLast
+        };
     }
+
+    _countAndCheckEnd(player, startRow, startCol, dx, dy, maxCount) {
+        let count = 0;
+        let endCell = null;
+
+        for (let i = 1; i < maxCount; i++) {
+            const newRow = startRow + dx * i;
+            const newCol = startCol + dy * i;
+
+            if (!this.board.isValidPosition(newRow, newCol)) {
+                break;
+            }
+
+            const cell = this.board.getCell(newRow, newCol);
+            if (cell !== player) {
+                endCell = cell;
+                break;
+            }
+
+            count++;
+        }
+
+        return { count, endCell };
+    }
+
 } 
