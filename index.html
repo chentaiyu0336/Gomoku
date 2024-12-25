@@ -103,6 +103,46 @@
             background-color: #8B4513;
             color: white;
         }
+
+        .cell.winning {
+            animation: winning-pulse 1s infinite;
+        }
+
+        .cell.place-animation::before {
+            animation: place-piece 0.3s ease-out;
+        }
+
+        .cell.hint::before {
+            background-color: rgba(255, 255, 0, 0.3);
+            border: 2px dashed #666;
+        }
+
+        @keyframes winning-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes place-piece {
+            0% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .status {
+            transition: opacity 0.2s ease;
+        }
+
+        .start-screen, .game-container {
+            transition: opacity 0.3s ease;
+        }
+
+        /* 添加游戏统计样式 */
+        #gameStats {
+            text-align: center;
+            font-size: 18px;
+            margin: 10px 0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +161,21 @@
             <button class="game-button" onclick="returnToSelectGameMode()">选择模式</button>
         </div> 
     </div>
-    <script src="game.js"></script>
+    <script type="module">
+        import { Game } from './game.js';
+        
+        window.startGame = function(mode) {
+            window.game = window.game || new Game();
+            window.game.startGame(mode);
+        };
+
+        window.restartGame = function() {
+            window.game && window.game.restartGame();
+        };
+
+        window.returnToSelectGameMode = function() {
+            window.game && window.game.returnToSelectGameMode();
+        };
+    </script>
 </body>
 </html> 
