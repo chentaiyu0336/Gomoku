@@ -74,7 +74,7 @@ export class Game {
 
     continueAIResponse() {
         if (!this.board.isFull()) {
-            this.ui.setNoticeMessage("AiService 思考中...");
+            this.ui.setNoticeMessage("AI 思考中...");
             setTimeout(() => this.makeAIMove(), 500);
         } else {
             this.ui.setNoticeMessage("平局！");
@@ -87,7 +87,7 @@ export class Game {
         this.makeMove(bestMove, GameConfig.AI);
 
         if (this.gameLogic.checkActualWin(GameConfig.AI, bestMove)) {
-            this.ui.setNoticeMessage("AiService 获胜！下次加油咯");
+            this.ui.setNoticeMessage("AI 获胜！下次加油咯");
             this.gameOver = true;
             return;
         }

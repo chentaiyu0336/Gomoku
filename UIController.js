@@ -7,6 +7,7 @@ export class UIController {
         this.startScreen = document.getElementById('startScreen');
         this.gameContainer = document.getElementById('gameContainer');
         this.cells = [];
+        this.lastHighlightedCell = null;
     }
 
     initializeBoard(clickHandler) {
@@ -32,18 +33,28 @@ export class UIController {
     updateCell(index, player) {
         if (index < 0 || index >= this.cells.length) return;
         
+        // 清除之前的高亮
+        if (this.lastHighlightedCell) {
+            this.lastHighlightedCell.classList.remove('latest');
+        }
+        
         const cell = this.cells[index];
         // 移除可能存在的其他棋子类
         cell.classList.remove(GameConfig.PLAYER, GameConfig.AI);
         // 添加新的棋子类
         cell.classList.add(player);
+        // 添加高亮效果
+        cell.classList.add('latest');
+        // 更新最后高亮的格子
+        this.lastHighlightedCell = cell;
     }
 
     resetBoard() {
-        // 清除所有棋子
+        // 清除所有棋子和高亮
         this.cells.forEach(cell => {
-            cell.classList.remove(GameConfig.PLAYER, GameConfig.AI);
+            cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest');
         });
+        this.lastHighlightedCell = null;  // 重置最后高亮的格子
         this.setNoticeMessage('游戏开始！');
     }
 
