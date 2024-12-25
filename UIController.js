@@ -60,7 +60,7 @@ export class UIController {
 
     showStartScreen() {
         if (this.startScreen) {
-            this.startScreen.style.display = 'block';
+            this.startScreen.style.display = 'flex';
             // 添加淡入效果
             setTimeout(() => {
                 this.startScreen.style.opacity = '1';
