@@ -15,6 +15,11 @@ export class UIController {
         this.boardElement.innerHTML = '';
         this.cells = [];
 
+        // 添加上边框线
+        const topBorder = document.createElement('div');
+        topBorder.className = 'top-border';
+        this.boardElement.appendChild(topBorder);
+
         // 创建棋盘格子
         for (let i = 0; i < GameConfig.BOARD_SIZE * GameConfig.BOARD_SIZE; i++) {
             const cell = document.createElement('div');
@@ -25,7 +30,7 @@ export class UIController {
             this.cells.push(cell);
         }
 
-        // 初始化棋盘网格样式
+        // 修改棋盘网格样式
         this.boardElement.style.gridTemplateColumns = 
             `repeat(${GameConfig.BOARD_SIZE}, 40px)`;
     }
