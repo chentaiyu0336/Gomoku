@@ -113,6 +113,12 @@
     padding: 10px 20px;
     font-size: 18px;
     cursor: pointer;
+    border-radius: 5px;
+}
+
+.game-button:hover {
+    background-color: #544f4ae3;
+    color: white;
 }
 
 .game-button-section {
