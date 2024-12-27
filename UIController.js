@@ -77,18 +77,17 @@ export class UIController {
     showStartScreen() {
         if (this.startScreen) {
             this.startScreen.style.display = 'flex';
-            // 添加淡入效果
             setTimeout(() => {
                 this.startScreen.style.opacity = '1';
-            }, 0);
+            }, 200);
         }
     }
 
     hideStartScreen() {
         if (this.startScreen) {
-            this.startScreen.style.opacity = '0';
+            this.startScreen.style.display = 'none';
             setTimeout(() => {
-                this.startScreen.style.display = 'none';
+                this.startScreen.style.opacity = '0';
             }, 0);
         }
     }
@@ -96,19 +95,18 @@ export class UIController {
     showGameContainer() {
         if (this.gameContainer) {
             this.gameContainer.style.display = 'block';
-            // 添加淡入效果
             setTimeout(() => {
                 this.gameContainer.style.opacity = '1';
-            }, 0);
+            }, 200);
         }
     }
 
     hideGameContainer() {
         if (this.gameContainer) {
-            this.gameContainer.style.opacity = '0';
+            this.gameContainer.style.display = 'none';
             setTimeout(() => {
-                this.gameContainer.style.display = 'none';
-            }, 300);
+                this.gameContainer.style.opacity = '0';
+            }, 0);
         }
     }
 
