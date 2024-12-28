@@ -44,14 +44,14 @@ export class Game {
     handleCellClick(e) {
         const index = parseInt(e.target.getAttribute('data-index'));
         
-        if (!this.board.isEmpty(index) || this.gameOver) {
-            this.ui.setNoticeMessage("这个地方已经下过啦!请重新在空白格子落子!");
+        if (!this.board.isEmpty(index) || this.gameOver || this.ui.isDisabled) {
             return;
         }
 
         this.makePlayerMove(index);
         
         if (!this.gameOver) {
+            this.ui.disableBoard();
             this.continueAIResponse();
         }
     }
@@ -75,7 +75,9 @@ export class Game {
     continueAIResponse() {
         if (!this.board.isFull()) {
             this.ui.setNoticeMessage("AI 思考中...");
-            setTimeout(() => this.makeAIMove(), 500);
+            setTimeout(() => {
+                this.makeAIMove();
+            }, 500);
         } else {
             this.ui.setNoticeMessage("平局！");
             this.gameOver = true;
@@ -92,6 +94,7 @@ export class Game {
             return;
         }
 
+        this.ui.enableBoard();
         this.switchToPlayerRound();
     }
 

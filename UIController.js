@@ -8,6 +8,7 @@ export class UIController {
         this.gameContainer = document.getElementById('gameContainer');
         this.cells = [];
         this.lastHighlightedCell = null;
+        this.isDisabled = false;
     }
 
     initializeBoard(clickHandler) {
@@ -60,6 +61,7 @@ export class UIController {
             cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest');
         });
         this.lastHighlightedCell = null;  // 重置最后高亮的格子
+        this.enableBoard();
         this.setNoticeMessage('游戏开始！');
     }
 
@@ -156,5 +158,27 @@ export class UIController {
                 平局: ${stats.draws}
             `;
         }
+    }
+
+    // 添加禁用棋盘的方法
+    disableBoard() {
+        this.isDisabled = true;
+        this.boardElement.classList.add('disabled');
+    }
+
+    // 添加启用棋盘的方法
+    enableBoard() {
+        this.isDisabled = false;
+        this.boardElement.classList.remove('disabled');
+    }
+
+    // 修改现有的handleCellClick方法
+    handleCellClick(clickHandler) {
+        return (e) => {
+            if (this.isDisabled) {
+                return; // 如果棋盘被禁用，直接返回
+            }
+            clickHandler(e);
+        };
     }
 } 

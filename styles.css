@@ -204,4 +204,22 @@
     font-size: 18px;
     margin: 10px 0;
     color: #666;
+}
+
+/* 添加禁用状态的样式 */
+.game-board.disabled {
+    cursor: not-allowed;
+}
+
+.game-board.disabled .cell:not(.X):not(.O) {
+    cursor: not-allowed;
+}
+
+/* 修改hover效果，添加禁用状态 */
+.game-board.disabled .cell:hover:not(.X):not(.O)::before {
+    content: '';
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="red" stroke-width="2"/><line x1="10" y1="10" x2="30" y2="30" stroke="red" stroke-width="2"/></svg>') center/contain no-repeat;
+    opacity: 0.5;
+    width: 34px;
+    height: 34px;
 } 
