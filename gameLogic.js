@@ -13,29 +13,6 @@ export class GameLogic {
             this._checkDirection(player, row, col, dx, dy));
     }
 
-    checkMayBeWin(player, lastMove, winCount) {
-        const row = Math.floor(lastMove / GameConfig.BOARD_SIZE);
-        const col = lastMove % GameConfig.BOARD_SIZE;
-        let count = 1;
-        let canWin = false;
-
-        GameConfig.DIRECTIONS.some(([dx, dy]) => {
-            count = 1;
-            const lineResult = this._checkLineInDirection(player, row, col, dx, dy, winCount);
-            count = lineResult.count;
-            
-            canWin = count >= winCount || 
-                (count === (winCount - 1) && lineResult.beforeFirst === '' && lineResult.afterLast === '');
-
-            return canWin;
-        });
-
-        return {
-            canWin,
-            count: count
-        };
-    }
-
     _checkDirection(player, row, col, dx, dy) {
         let count = 1;
 
@@ -62,50 +39,103 @@ export class GameLogic {
         return count;
     }
 
-    _checkLineInDirection(player, row, col, dx, dy, winCount) {
-        let count = 1;
-        let beforeFirst = null; // 检查连子前一个棋格子
-        let afterLast = null; // 检查连子后一个棋格子
-
-        // 检查正向
-        const forwardResult = this._countAndCheckEnd(player, row, col, dx, dy, winCount);
-        count += forwardResult.count;
-        afterLast = forwardResult.endCell;
-
-        // 检查反向
-        const backwardResult = this._countAndCheckEnd(player, row, col, -dx, -dy, winCount);
-        count += backwardResult.count;
-        beforeFirst = backwardResult.endCell;
-
+    checkSpecialPatterns(player, lastMove) {
+        const row = Math.floor(lastMove / GameConfig.BOARD_SIZE);
+        const col = lastMove % GameConfig.BOARD_SIZE;
+        
         return {
-            count,
-            beforeFirst,
-            afterLast
+            liveFour: this._checkLiveFour(player, row, col),
+            deadFour: this._checkDeadFour(player, row, col),
+            liveThree: this._checkLiveThree(player, row, col)
         };
     }
 
-    _countAndCheckEnd(player, startRow, startCol, dx, dy, maxCount) {
-        let count = 0;
-        let endCell = null;
-
-        for (let i = 1; i < maxCount; i++) {
-            const newRow = startRow + dx * i;
-            const newCol = startCol + dy * i;
-
-            if (!this.board.isValidPosition(newRow, newCol)) {
-                break;
+    _checkLiveFour(player, row, col) {
+        let liveFourCount = 0;
+        
+        GameConfig.DIRECTIONS.forEach(([dx, dy]) => {
+            const pattern = this._getLinePattern(player, row, col, dx, dy, GameConfig.WIN_COUNT);
+            // 活四模式: _XXXX_ (其中X是玩家棋子，_是空位)
+            if (pattern.beforeFirst === '' && pattern.count === (GameConfig.WIN_COUNT - 1) && pattern.afterLast === '') {
+                liveFourCount++;
             }
-
-            const cell = this.board.getCell(newRow, newCol);
-            if (cell !== player) {
-                endCell = cell;
-                break;
-            }
-
-            count++;
-        }
-
-        return { count, endCell };
+        });
+        
+        return liveFourCount;
     }
 
+    _checkDeadFour(player, row, col) {
+        let deadFourCount = 0;
+        
+        GameConfig.DIRECTIONS.forEach(([dx, dy]) => {
+            const pattern = this._getLinePattern(player, row, col, dx, dy, GameConfig.WIN_COUNT);
+            // 冲四模式: XXXX_ 或 _XXXX (其中一端被封)
+            if ((pattern.count === (GameConfig.WIN_COUNT - 1) && 
+                (pattern.beforeFirst === '' || pattern.afterLast === '') &&
+                !(pattern.beforeFirst === '' && pattern.afterLast === ''))) {
+                deadFourCount++;
+            }
+        });
+        
+        return deadFourCount;
+    }
+
+    _checkLiveThree(player, row, col) {
+        let liveThreeCount = 0;
+        
+        GameConfig.DIRECTIONS.forEach(([dx, dy]) => {
+            const pattern = this._getLinePattern(player, row, col, dx, dy, GameConfig.WIN_COUNT);
+            // 活三模式: __XXX__ (可以形成活四的三连子)
+            if (pattern.beforeFirst === '' && pattern.count === (GameConfig.WIN_COUNT - 2) && pattern.afterLast === '') {
+                liveThreeCount++;
+            }
+        });
+        
+        return liveThreeCount;
+    }
+
+    _getLinePattern(player, row, col, dx, dy, length) {
+        // 获取一条线上的棋型
+        let beforeFirst = null;
+        let afterLast = null;
+        let count = 1;
+        
+        // 向前检查
+        for (let i = 1; i < length; i++) {
+            const newRow = row - dx * i;
+            const newCol = col - dy * i;
+            
+            if (!this.board.isValidPosition(newRow, newCol)) {
+                beforeFirst = 'edge';
+                break;
+            }
+            
+            const cell = this.board.getCell(newRow, newCol);
+            if (cell !== player) {
+                beforeFirst = cell;
+                break;
+            }
+            count++;
+        }
+        
+        // 向后检查
+        for (let i = 1; i < length; i++) {
+            const newRow = row + dx * i;
+            const newCol = col + dy * i;
+            
+            if (!this.board.isValidPosition(newRow, newCol)) {
+                afterLast = 'edge';
+                break;
+            }
+            
+            const cell = this.board.getCell(newRow, newCol);
+            if (cell !== player) {
+                afterLast = cell;
+                break;
+            }
+            count++;
+        }
+        
+        return { count, beforeFirst, afterLast };
+    }
 } 

@@ -7,60 +7,34 @@ export class AiService {
     }
 
     findBestMove() {
-        for (let length = GameConfig.WIN_COUNT; length >= 3; length--) {
-            const potentialWin = this._findBestPotentialWinMove(length);
-            if (potentialWin !== null) {
-                console.log('has potentialWin: ', JSON.stringify(potentialWin));
-                return potentialWin.moveIndex;
-            }
+        const winMove = this._findWinMove(GameConfig.AI);
+        if (winMove) {
+            return winMove;
+        }
+
+        const blockMove = this._findWinMove(GameConfig.PLAYER);
+        if (blockMove) {
+            return blockMove;
         }
 
         return this._findStrategicMove();
     }
 
-    _findBestPotentialWinMove(winCount) {
-        let winMove = this._findWinningMove(GameConfig.AI, winCount);
-        let blockMove = this._findWinningMove(GameConfig.PLAYER, winCount);
-        
-        if (winMove && blockMove) {
-            console.log('>>> winMove: ', JSON.stringify(winMove));
-            console.log('>>> blockMove: ', JSON.stringify(blockMove));
-            return winMove.count >= blockMove.count ? winMove : blockMove;
-        }
-    
-        if (winMove) {
-            console.log('>>> winMove: ', JSON.stringify(winMove));
-            return winMove;
-        }
-    
-        if (blockMove) {
-            console.log('>>> blockMove: ', JSON.stringify(blockMove));
-            return blockMove;
-        }
-
-        return null;
-    }
-
-    _findWinningMove(player, winCount) {
-        let winMove = null;
+    _findWinMove(player) {
         for (let i = 0; i < this.board.cells.length; i++) {
             if (this.board.isEmpty(i)) {
                 this.board.setCell(i, player);
-                let { canWin, count } = this.gameLogic.checkMayBeWin(player, i, winCount);
-                if (winCount !== GameConfig.WIN_COUNT && this._checkMoveInEdge(i)) {
-                    canWin = false;
-                }
-                if (canWin && (!winMove || winMove.count < count)) {
-                    winMove = { moveIndex: i, count: count };
-                }
+                let canWin = this.gameLogic.checkActualWin(player, i);
                 this.board.setCell(i, '');
+                if (canWin) {
+                    return i;
+                }
             }
         }
-        return winMove;
+        return null;
     }
 
     _findStrategicMove() {
-        console.log('in findStrategicMove');
         let bestScore = -1;
         let bestMove = null;
 
@@ -109,6 +83,18 @@ export class AiService {
             score += 2;
         }
 
+        // 添加特殊棋型的评分
+        const patterns = this.gameLogic.checkSpecialPatterns(GameConfig.AI, pos);
+        if (patterns.liveFour) score += 1000;
+        if (patterns.deadFour) score += 500;
+        if (patterns.liveThree) score += 200;
+        
+        // 检查是否需要防守对手的特殊棋型
+        const opponentPatterns = this.gameLogic.checkSpecialPatterns(GameConfig.PLAYER, pos);
+        if (opponentPatterns.liveFour) score += 900;
+        if (opponentPatterns.deadFour) score += 400;
+        if (opponentPatterns.liveThree) score += 150;
+        
         return score;
     }
 
@@ -122,11 +108,5 @@ export class AiService {
     _isNearCenter(row, col) {
         const center = Math.floor(GameConfig.BOARD_SIZE / 2);
         return Math.abs(row - center) <= 2 && Math.abs(col - center) <= 2;
-    }
-
-    _checkMoveInEdge(index) {
-        const row = Math.floor(index / GameConfig.BOARD_SIZE);
-        const col = index % GameConfig.BOARD_SIZE;
-        return row === 0 || row === GameConfig.BOARD_SIZE - 1 || col === 0 || col === GameConfig.BOARD_SIZE - 1;
     }
 } 
