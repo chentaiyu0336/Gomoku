@@ -7,27 +7,10 @@ export class AiService {
     }
 
     findBestMove() {
-        const winMove = this._findWinningMove(GameConfig.AI, GameConfig.WIN_COUNT);
-        const blockMove = this._findWinningMove(GameConfig.PLAYER, GameConfig.WIN_COUNT);
-        console.log('>>> winMove: ', JSON.stringify(winMove));
-        console.log('>>> blockMove: ', JSON.stringify(blockMove));
-
-        if (winMove && blockMove) {
-            return winMove.count >= blockMove.count ? winMove.moveIndex : blockMove.moveIndex;
-        }
-    
-        if (winMove) {
-            return winMove.moveIndex;
-        }
-    
-        if (blockMove) {
-            return blockMove.moveIndex;
-        }
-
-        for (let length = GameConfig.WIN_COUNT -1; length >= 3; length--) {
-            const potentialWin = this._findWinningMove(GameConfig.AI, length);
-            console.log('has potentialWin: ', JSON.stringify(potentialWin));
+        for (let length = GameConfig.WIN_COUNT; length >= 3; length--) {
+            const potentialWin = this._findBestPotentialWinMove(length);
             if (potentialWin !== null) {
+                console.log('has potentialWin: ', JSON.stringify(potentialWin));
                 return potentialWin.moveIndex;
             }
         }
@@ -35,7 +18,31 @@ export class AiService {
         return this._findStrategicMove();
     }
 
+    _findBestPotentialWinMove(winCount) {
+        let winMove = this._findWinningMove(GameConfig.AI, winCount);
+        let blockMove = this._findWinningMove(GameConfig.PLAYER, winCount);
+        
+        if (winMove && blockMove) {
+            console.log('>>> winMove: ', JSON.stringify(winMove));
+            console.log('>>> blockMove: ', JSON.stringify(blockMove));
+            return winMove.count >= blockMove.count ? winMove : blockMove;
+        }
+    
+        if (winMove) {
+            console.log('>>> winMove: ', JSON.stringify(winMove));
+            return winMove;
+        }
+    
+        if (blockMove) {
+            console.log('>>> blockMove: ', JSON.stringify(blockMove));
+            return blockMove;
+        }
+
+        return null;
+    }
+
     _findWinningMove(player, winCount) {
+        let winMove = null;
         for (let i = 0; i < this.board.cells.length; i++) {
             if (this.board.isEmpty(i)) {
                 this.board.setCell(i, player);
@@ -43,14 +50,13 @@ export class AiService {
                 if (winCount !== GameConfig.WIN_COUNT && this._checkMoveInEdge(i)) {
                     canWin = false;
                 }
-                if (canWin) {
-                    this.board.setCell(i, '');
-                    return { moveIndex: i, count: count };
+                if (canWin && (!winMove || winMove.count < count)) {
+                    winMove = { moveIndex: i, count: count };
                 }
                 this.board.setCell(i, '');
             }
         }
-        return null;
+        return winMove;
     }
 
     _findStrategicMove() {
