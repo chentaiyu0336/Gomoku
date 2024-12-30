@@ -19,6 +19,7 @@
         <div class="game-button-section">
             <button class="game-button" onclick="returnToSelectGameMode()">选择模式</button>
             <button class="game-button" onclick="restartGame()">重新开始</button>
+            <button class="game-button" onclick="undoMove()">悔棋</button>
         </div> 
     </div>
     <script type="module">
@@ -35,6 +36,10 @@
 
         window.returnToSelectGameMode = function() {
             window.game && window.game.returnToSelectGameMode();
+        };
+
+        window.undoMove = function() {
+            window.game && window.game.undoLastMoves();
         };
     </script>
 </body>

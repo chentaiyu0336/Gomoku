@@ -56,11 +56,10 @@ export class UIController {
     }
 
     resetBoard() {
-        // 清除所有棋子和高亮
         this.cells.forEach(cell => {
-            cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest');
+            cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest', 'winning');
         });
-        this.lastHighlightedCell = null;  // 重置最后高亮的格子
+        this.lastHighlightedCell = null;
         this.enableBoard();
         this.setNoticeMessage('游戏开始！');
     }
@@ -180,5 +179,17 @@ export class UIController {
             }
             clickHandler(e);
         };
+    }
+
+    clearCell(index) {
+        if (index < 0 || index >= this.cells.length) return;
+        
+        const cell = this.cells[index];
+        cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest');
+        
+        // 如果这个格子是最后高亮的，清除引用
+        if (this.lastHighlightedCell === cell) {
+            this.lastHighlightedCell = null;
+        }
     }
 } 

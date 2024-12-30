@@ -12,6 +12,7 @@ export class Game {
         this.ui = new UIController();
         this.gameOver = false;
         this.currentMode = null;
+        this.moveHistory = [];
 
         this.init();
     }
@@ -28,6 +29,7 @@ export class Game {
     }
 
     restartGame() {
+        this.moveHistory = [];
         this.board.reset();
         this.gameOver = false;
         this.ui.resetBoard();
@@ -70,6 +72,7 @@ export class Game {
     makeMove(index, player) {
         this.board.setCell(index, player);
         this.ui.updateCell(index, player);
+        this.moveHistory.push({ index, player });
     }
 
     continueAIResponse() {
@@ -110,5 +113,22 @@ export class Game {
     returnToSelectGameMode() {
         this.ui.showStartScreen();
         this.ui.hideGameContainer();
+    }
+
+    undoLastMoves() {
+        if (this.moveHistory.length < 2) return;
+
+        const aiMove = this.moveHistory.pop();
+        this.board.setCell(aiMove.index, '');
+        
+        const playerMove = this.moveHistory.pop();
+        this.board.setCell(playerMove.index, '');
+
+        this.ui.clearCell(aiMove.index);
+        this.ui.clearCell(playerMove.index);
+        
+        this.gameOver = false;
+        this.ui.enableBoard();
+        this.ui.setNoticeMessage("轮到你了");
     }
 }
