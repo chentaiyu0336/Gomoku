@@ -138,4 +138,47 @@ export class GameLogic {
         
         return { count, beforeFirst, afterLast };
     }
+
+    getWinningCells(player, lastMove) {
+        const row = Math.floor(lastMove / GameConfig.BOARD_SIZE);
+        const col = lastMove % GameConfig.BOARD_SIZE;
+        
+        for (const [dx, dy] of GameConfig.DIRECTIONS) {
+            const winningCells = this._getWinningCellsInDirection(player, row, col, dx, dy);
+            if (winningCells.length >= GameConfig.WIN_COUNT) {
+                return winningCells;
+            }
+        }
+        return [];
+    }
+
+    _getWinningCellsInDirection(player, row, col, dx, dy) {
+        const winningCells = [row * GameConfig.BOARD_SIZE + col];
+        
+        // 正向检查
+        for (let i = 1; i < GameConfig.WIN_COUNT; i++) {
+            const newRow = row + dx * i;
+            const newCol = col + dy * i;
+            
+            if (!this.board.isValidPosition(newRow, newCol) || 
+                this.board.getCell(newRow, newCol) !== player) {
+                break;
+            }
+            winningCells.push(newRow * GameConfig.BOARD_SIZE + newCol);
+        }
+        
+        // 反向检查
+        for (let i = 1; i < GameConfig.WIN_COUNT; i++) {
+            const newRow = row - dx * i;
+            const newCol = col - dy * i;
+            
+            if (!this.board.isValidPosition(newRow, newCol) || 
+                this.board.getCell(newRow, newCol) !== player) {
+                break;
+            }
+            winningCells.push(newRow * GameConfig.BOARD_SIZE + newCol);
+        }
+        
+        return winningCells;
+    }
 } 

@@ -185,11 +185,24 @@ export class UIController {
         if (index < 0 || index >= this.cells.length) return;
         
         const cell = this.cells[index];
-        cell.classList.remove(GameConfig.PLAYER, GameConfig.AI, 'latest');
+        // 清除所有可能的类名
+        cell.classList.remove(
+            GameConfig.PLAYER, 
+            GameConfig.AI, 
+            'latest',
+            'winning',  // 添加这行确保清除获胜效果
+            'place-animation'
+        );
         
         // 如果这个格子是最后高亮的，清除引用
         if (this.lastHighlightedCell === cell) {
             this.lastHighlightedCell = null;
         }
+    }
+
+    clearAllWinningEffects() {
+        this.cells.forEach(cell => {
+            cell.classList.remove('winning');
+        });
     }
 } 

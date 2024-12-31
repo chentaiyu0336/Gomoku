@@ -58,12 +58,14 @@ export class Game {
         }
     }
 
-    makePlayerMove(index) {
-        if (!this.board.isEmpty(index) || this.gameOver) return;
+    makePlayerMove(moveIndex) {
+        if (!this.board.isEmpty(moveIndex) || this.gameOver) return;
 
-        this.makeMove(index, GameConfig.PLAYER);
+        this.makeMove(moveIndex, GameConfig.PLAYER);
 
-        if (this.gameLogic.checkActualWin(GameConfig.PLAYER, index)) {
+        if (this.gameLogic.checkActualWin(GameConfig.PLAYER, moveIndex)) {
+            const winningCells = this.gameLogic.getWinningCells(GameConfig.PLAYER, moveIndex);
+            this.ui.highlightWinningCells(winningCells);
             this.ui.setNoticeMessage('你赢啦！');
             this.gameOver = true;
         }
@@ -92,6 +94,8 @@ export class Game {
         this.makeMove(bestMove, GameConfig.AI);
 
         if (this.gameLogic.checkActualWin(GameConfig.AI, bestMove)) {
+            const winningCells = this.gameLogic.getWinningCells(GameConfig.AI, bestMove);
+            this.ui.highlightWinningCells(winningCells);
             this.ui.setNoticeMessage("AI 获胜！下次加油咯");
             this.gameOver = true;
             return;
@@ -117,7 +121,11 @@ export class Game {
 
     undoLastMoves() {
         if (this.moveHistory.length < 2) return;
-
+        
+        if (this.gameOver) {
+            this.ui.clearAllWinningEffects();
+        }
+        
         const aiMove = this.moveHistory.pop();
         this.board.setCell(aiMove.index, '');
         
