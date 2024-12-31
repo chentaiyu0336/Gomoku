@@ -31,10 +31,37 @@
 git clone [你的仓库URL]
 ```
 
-2. 运行游戏：
-   - 使用 VSCode 的 Live Server 插件
-   - 右键 `index.html` 文件
-   - 选择 "Open with Live Server"
+2. 运行游戏（以下任选一种方式）：
+
+方式一：使用 Python 内置的 HTTP 服务器
+```bash
+# Python 3.x
+python -m http.server
+
+# Python 2.x
+python -m SimpleHTTPServer
+```
+然后在浏览器中访问 `http://localhost:8000`
+
+方式二：使用 Node.js 的 http-server
+```bash
+# 全局安装 http-server
+npm install -g http-server
+
+# 在项目目录下运行
+http-server
+```
+然后在浏览器中访问 `http://localhost:8080`
+
+方式三：使用 VSCode 的 Live Server 插件
+- 右键 `index.html` 文件
+- 选择 "Open with Live Server"
+
+方式四：直接使用浏览器打开
+- 直接双击 `index.html` 文件
+- 注意：由于浏览器安全策略，某些浏览器可能会限制直接打开文件的 JavaScript 模块功能，建议使用以上其他方式
+
+推荐使用方式一或方式二，这样可以避免浏览器的跨域限制和模块加载问题。
 
 ## 游戏规则
 
