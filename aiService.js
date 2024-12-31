@@ -56,14 +56,33 @@ export class AiService {
         const col = pos % GameConfig.BOARD_SIZE;
         let score = 0;
 
+        const center = Math.floor(GameConfig.BOARD_SIZE / 2);
+        const distanceToCenter = Math.max(Math.abs(row - center), Math.abs(col - center));
+        
+        score += Math.max(0, 5 - distanceToCenter);
+        
+        if (this.moveHistory && this.moveHistory.length < 4) {
+            if (row === 0 || row === GameConfig.BOARD_SIZE - 1 || 
+                col === 0 || col === GameConfig.BOARD_SIZE - 1) {
+                score -= 10;
+            }
+        }
+
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
                 if (i === 0 && j === 0) continue;
 
                 let playerCount = 0;
                 let aiCount = 0;
+                let emptyBefore = false;
+                let emptyAfter = false;
 
-                for (let step = 1; step < 3; step++) {
+                if (this.board.isValidPosition(row - i, col - j) && 
+                    this.board.getCell(row - i, col - j) === '') {
+                    emptyBefore = true;
+                }
+
+                for (let step = 0; step < 4; step++) {
                     const newRow = row + i * step;
                     const newCol = col + j * step;
 
@@ -72,15 +91,19 @@ export class AiService {
                     const cell = this.board.getCell(newRow, newCol);
                     if (cell === GameConfig.PLAYER) playerCount++;
                     else if (cell === GameConfig.AI) aiCount++;
+                    else break;
                 }
 
-                score += this._evaluateLineScore(playerCount, aiCount);
-            }
-        }
+                if (this.board.isValidPosition(row + i * 4, col + j * 4) && 
+                    this.board.getCell(row + i * 4, col + j * 4) === '') {
+                    emptyAfter = true;
+                }
 
-        // 额外考虑中心位置的权重
-        if (this._isNearCenter(row, col)) {
-            score += 2;
+                if (emptyBefore && emptyAfter) {
+                    if (aiCount > 0) score += aiCount * 4;
+                    if (playerCount > 0) score += playerCount * 3;
+                }
+            }
         }
 
         // 添加特殊棋型的评分
@@ -96,17 +119,5 @@ export class AiService {
         if (opponentPatterns.liveThree) score += 150;
         
         return score;
-    }
-
-    _evaluateLineScore(playerCount, aiCount) {
-        if (playerCount && aiCount) return 1;  // 双方都有子
-        if (playerCount) return playerCount * 2;  // 只有玩家的子
-        if (aiCount) return aiCount * 3;  // 只有 AiService 的子
-        return 1;  // 空线
-    }
-
-    _isNearCenter(row, col) {
-        const center = Math.floor(GameConfig.BOARD_SIZE / 2);
-        return Math.abs(row - center) <= 2 && Math.abs(col - center) <= 2;
     }
 } 
