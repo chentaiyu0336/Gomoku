@@ -51,20 +51,20 @@ export class Game {
         }
 
         this.makePlayerMove(index);
+        this.ui.disableBoard();
         
         if (!this.gameOver) {
-            this.ui.disableBoard();
             this.continueAIResponse();
         }
     }
 
-    makePlayerMove(moveIndex) {
-        if (!this.board.isEmpty(moveIndex) || this.gameOver) return;
+    makePlayerMove(index) {
+        if (!this.board.isEmpty(index) || this.gameOver) return;
 
-        this.makeMove(moveIndex, GameConfig.PLAYER);
+        this.makeMove(index, GameConfig.PLAYER);
 
-        if (this.gameLogic.checkActualWin(GameConfig.PLAYER, moveIndex)) {
-            const winningCells = this.gameLogic.getWinningCells(GameConfig.PLAYER, moveIndex);
+        if (this.gameLogic.checkActualWin(GameConfig.PLAYER, index)) {
+            const winningCells = this.gameLogic.getWinningCells(GameConfig.PLAYER, index);
             this.ui.highlightWinningCells(winningCells);
             this.ui.setNoticeMessage('你赢啦！');
             this.gameOver = true;
