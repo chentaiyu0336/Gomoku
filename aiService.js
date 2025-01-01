@@ -4,6 +4,11 @@ export class AiService {
     constructor(board, gameLogic) {
         this.board = board;
         this.gameLogic = gameLogic;
+        this.difficulty = GameConfig.DIFFICULTY.NORMAL; // 默认普通难度
+    }
+
+    setDifficulty(difficulty) {
+        this.difficulty = difficulty;
     }
 
     findBestMove() {
@@ -52,6 +57,38 @@ export class AiService {
     }
 
     _evaluatePosition(pos) {
+        if (this.difficulty === GameConfig.DIFFICULTY.HARD) {
+            return this._evaluatePositionHard(pos);
+        }
+        return this._evaluatePositionNormal(pos);
+    }
+
+    // 原来的简单评估算法
+    _evaluatePositionNormal(pos) {
+        let score = 0;
+        const row = Math.floor(pos / GameConfig.BOARD_SIZE);
+        const col = pos % GameConfig.BOARD_SIZE;
+        const center = Math.floor(GameConfig.BOARD_SIZE / 2);
+        const distanceToCenter = Math.max(Math.abs(row - center), Math.abs(col - center));
+
+        score += Math.max(0, 5 - distanceToCenter);
+
+        // 检查特殊棋型
+        const patterns = this.gameLogic.checkSpecialPatterns(GameConfig.AI, pos);
+        if (patterns.liveFour) score += 1000;
+        if (patterns.deadFour) score += 500;
+        if (patterns.liveThree) score += 200;
+        
+        const opponentPatterns = this.gameLogic.checkSpecialPatterns(GameConfig.PLAYER, pos);
+        if (opponentPatterns.liveFour) score += 900;
+        if (opponentPatterns.deadFour) score += 400;
+        if (opponentPatterns.liveThree) score += 150;
+
+        return score;
+    }
+
+    // 新的困难模式评估算法
+    _evaluatePositionHard(pos) {
         const row = Math.floor(pos / GameConfig.BOARD_SIZE);
         const col = pos % GameConfig.BOARD_SIZE;
         let score = 0;

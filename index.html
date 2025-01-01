@@ -8,9 +8,23 @@
 <body>
     <div class="start-screen" id="startScreen">
         <h1 class="panel-header">五子棋游戏</h1>
-        <h2>请选择游戏模式：</h2>
-        <button class="mode-button" onclick="startGame('player')">玩家先手</button>
-        <button class="mode-button" onclick="startGame('ai')">AI先手</button>
+        <div class="game-settings">
+            <div class="setting-group">
+                <label for="difficulty">难度选择：</label>
+                <select id="difficulty" class="setting-select">
+                    <option value="normal">普通模式</option>
+                    <option value="hard">困难模式</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="firstMove">先手选择：</label>
+                <select id="firstMove" class="setting-select">
+                    <option value="player">玩家先手</option>
+                    <option value="ai">AI先手</option>
+                </select>
+            </div>
+            <button class="start-button" onclick="startSelectedGame()">开始游戏</button>
+        </div>
     </div>
     
     <div class="game-container" id="gameContainer">
@@ -25,9 +39,11 @@
     <script type="module">
         import { Game } from './game.js';
         
-        window.startGame = function(mode) {
+        window.startSelectedGame = function() {
+            const difficulty = document.getElementById('difficulty').value;
+            const mode = document.getElementById('firstMove').value;
             window.game = window.game || new Game();
-            window.game.startGame(mode);
+            window.game.startGame(mode, difficulty);
         };
 
         window.restartGame = function() {

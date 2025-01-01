@@ -21,8 +21,9 @@ export class Game {
         this.ui.initializeBoard(this.handleCellClick.bind(this));
     }
 
-    startGame(mode) {
+    startGame(mode, difficulty) {
         this.currentMode = mode;
+        this.ai.setDifficulty(difficulty);
         this.ui.hideStartScreen();
         this.ui.showGameContainer();
         this.restartGame();
