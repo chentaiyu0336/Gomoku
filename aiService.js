@@ -57,13 +57,42 @@ export class AiService {
     }
 
     _evaluatePosition(pos) {
-        if (this.difficulty === GameConfig.DIFFICULTY.HARD) {
-            return this._evaluatePositionHard(pos);
+        switch(this.difficulty) {
+            case GameConfig.DIFFICULTY.EASY:
+                return this._evaluatePositionEasy(pos);
+            case GameConfig.DIFFICULTY.HARD:
+                return this._evaluatePositionHard(pos);
+            default:
+                return this._evaluatePositionNormal(pos);
         }
-        return this._evaluatePositionNormal(pos);
     }
 
-    // 原来的简单评估算法
+    // 弱智模式评估算法
+    _evaluatePositionEasy(pos) {
+        const row = Math.floor(pos / GameConfig.BOARD_SIZE);
+        const col = pos % GameConfig.BOARD_SIZE;
+        const center = Math.floor(GameConfig.BOARD_SIZE / 2);
+        const distanceToCenter = Math.max(Math.abs(row - center), Math.abs(col - center));
+        
+        let score = 5 - distanceToCenter;
+
+        // 随机因素，让AI偶尔做出"错误"的选择
+        if (Math.random() < 0.3) {  // 30%的概率做出随机选择
+            score += Math.random() * 100;
+        }
+
+        const opponentPatterns = this.gameLogic.checkSpecialPatterns(GameConfig.PLAYER, pos);
+        if (opponentPatterns.liveFour) {
+            score += 50;  // 降低防守权重
+        }
+        if (opponentPatterns.deadFour || opponentPatterns.liveThree) {
+            score += 30;  // 降低防守权重
+        }
+
+        return score;
+    }
+
+    // 普通模式评估算法
     _evaluatePositionNormal(pos) {
         let score = 0;
         const row = Math.floor(pos / GameConfig.BOARD_SIZE);
@@ -87,7 +116,7 @@ export class AiService {
         return score;
     }
 
-    // 新的困难模式评估算法
+    // 大师模式评估算法
     _evaluatePositionHard(pos) {
         const row = Math.floor(pos / GameConfig.BOARD_SIZE);
         const col = pos % GameConfig.BOARD_SIZE;

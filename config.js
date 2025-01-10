@@ -10,6 +10,7 @@ export const GameConfig = {
         [1, -1]   // 右上对角
     ],
     DIFFICULTY: {
+        EASY: 'easy',
         NORMAL: 'normal',
         HARD: 'hard'
     }
